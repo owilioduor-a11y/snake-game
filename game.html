@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <style>
+        /* Use dynamic viewport height for mobile browsers */
+        @supports (height: 100dvh) {
+            .game-page {
+                height: 100dvh;
+            }
+        }
+    </style>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#2d2d44">
@@ -33,6 +41,10 @@
             <div id="instructions">
                 Click/tap or swipe to control the snake • Eat red food to grow • Avoid walls and yourself
             </div>
+        </div>
+        <div id="sizeReductionNotification">
+            <h3>🎉 Congratulations!</h3>
+            <p>You've reached 250 points! Snake size reduced to continue the challenge.</p>
         </div>
     </div>
     <script src="game-data.js"></script>

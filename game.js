@@ -25,9 +25,8 @@ function updateGridSize() {
         currentGridSize = GRID_SIZE; // Default on desktop
     }
     
-    // Recalculate grid dimensions
-    GRID_WIDTH = Math.floor(originalCanvasWidth / currentGridSize);
-    GRID_HEIGHT = Math.floor(originalCanvasHeight / currentGridSize);
+    // Grid dimensions will be calculated in setupCanvas based on actual canvas size
+    // This function just sets the cell size
 }
 
 let GRID_WIDTH, GRID_HEIGHT;
@@ -50,8 +49,8 @@ function initGame() {
     const difficultySettings = gameData.difficultySettings[currentDifficulty];
     currentFPS = difficultySettings.fps;
     
-    canvas.width = originalCanvasWidth;
-    canvas.height = originalCanvasHeight;
+    // setupCanvas will handle canvas sizing
+    setupCanvas();
     
     snake = [{x: Math.floor(GRID_WIDTH / 2), y: Math.floor(GRID_HEIGHT / 2)}];
     direction = {x: 1, y: 0};
@@ -71,7 +70,6 @@ function initGame() {
     highScoreElement.textContent = gameData.getHighScore(currentDifficulty);
     comboElement.textContent = '0';
     
-    setupCanvas();
     draw();
 }
 
@@ -79,7 +77,7 @@ function setupCanvas() {
     const container = document.getElementById('gameContainer');
     const navHeight = document.querySelector('.game-nav').offsetHeight;
     
-    // On smaller devices, prioritize height to cover more screen
+    // Dynamic viewport sizing for mobile optimization
     let heightPercentage = 0.75; // Default for larger screens
     let marginSize = 30;
     let prioritizeHeight = false;
@@ -107,50 +105,62 @@ function setupCanvas() {
         prioritizeHeight = true;
     }
     
-    const availableHeight = window.innerHeight - navHeight - marginSize;
+    // Use dynamic viewport height for mobile browsers
+    const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    const availableHeight = viewportHeight - navHeight - marginSize;
     const containerWidth = Math.min(window.innerWidth - marginSize, container.clientWidth - marginSize);
-    const containerHeight = Math.min(availableHeight, window.innerHeight * heightPercentage);
+    const containerHeight = Math.min(availableHeight, viewportHeight * heightPercentage);
     
-    let newWidth = originalCanvasWidth;
-    let newHeight = originalCanvasHeight;
+    // Calculate canvas resolution with device pixel ratio for retina displays
+    const dpr = window.devicePixelRatio || 1;
+    let newWidth, newHeight;
     
-    // On smaller devices, fit height first then scale width
     if (prioritizeHeight) {
-        const heightScale = containerHeight / originalCanvasHeight;
-        newHeight = containerHeight;
-        newWidth = originalCanvasWidth * heightScale;
-        
-        // Then check if width fits
-        if (newWidth > containerWidth) {
-            const widthScale = containerWidth / newWidth;
-            newWidth = containerWidth;
-            newHeight = newHeight * widthScale;
-        }
+        // On mobile, use actual container dimensions
+        newWidth = Math.floor(containerWidth * dpr);
+        newHeight = Math.floor(containerHeight * dpr);
     } else {
-        // Standard scaling for larger screens
+        // On desktop, scale from original dimensions
+        newWidth = originalCanvasWidth;
+        newHeight = originalCanvasHeight;
+        
         if (containerWidth < originalCanvasWidth) {
             const scale = containerWidth / originalCanvasWidth;
-            newWidth = containerWidth;
-            newHeight = originalCanvasHeight * scale;
+            newWidth = Math.floor(containerWidth * dpr);
+            newHeight = Math.floor(originalCanvasHeight * scale * dpr);
         }
         
-        if (containerHeight < newHeight) {
-            const scale = containerHeight / originalCanvasHeight;
-            newHeight = containerHeight;
-            newWidth = originalCanvasWidth * scale;
+        if (containerHeight < newHeight / dpr) {
+            const scale = containerHeight / (newHeight / dpr);
+            newHeight = Math.floor(containerHeight * dpr);
+            newWidth = Math.floor(newWidth * scale);
         }
     }
+    
+    // Set canvas resolution
+    canvas.width = newWidth;
+    canvas.height = newHeight;
+    
+    // Update grid size dynamically based on new canvas dimensions
+    const pixelRatio = dpr;
+    const logicalWidth = newWidth / pixelRatio;
+    const logicalHeight = newHeight / pixelRatio;
+    
+    // Calculate grid dimensions based on current grid size
+    GRID_WIDTH = Math.floor(logicalWidth / currentGridSize);
+    GRID_HEIGHT = Math.floor(logicalHeight / currentGridSize);
+    
+    // Set display size
+    canvas.style.width = logicalWidth + 'px';
+    canvas.style.height = logicalHeight + 'px';
     
     // Ensure minimum size for playability
     const minSize = 240;
-    if (newWidth < minSize) {
-        const scale = minSize / originalCanvasWidth;
-        newWidth = minSize;
-        newHeight = originalCanvasHeight * scale;
+    if (logicalWidth < minSize) {
+        const scale = minSize / logicalWidth;
+        canvas.style.width = minSize + 'px';
+        canvas.style.height = (logicalHeight * scale) + 'px';
     }
-    
-    canvas.style.width = newWidth + 'px';
-    canvas.style.height = newHeight + 'px';
 }
 
 function spawnFood() {
@@ -181,9 +191,9 @@ function draw() {
 
     if (!gameStarted) {
         ctx.fillStyle = '#00ff00';
-        ctx.fillRect(GRID_WIDTH/2 * GRID_SIZE + 1, GRID_HEIGHT/2 * GRID_SIZE + 1, GRID_SIZE - 2, GRID_SIZE - 2);
+        ctx.fillRect(GRID_WIDTH/2 * currentGridSize + 1, GRID_HEIGHT/2 * currentGridSize + 1, currentGridSize - 2, currentGridSize - 2);
         ctx.fillStyle = '#ff3333';
-        ctx.fillRect((GRID_WIDTH/2 + 5) * GRID_SIZE + 1, GRID_HEIGHT/2 * GRID_SIZE + 1, GRID_SIZE - 2, GRID_SIZE - 2);
+        ctx.fillRect((GRID_WIDTH/2 + 5) * currentGridSize + 1, GRID_HEIGHT/2 * currentGridSize + 1, currentGridSize - 2, currentGridSize - 2);
         ctx.restore();
         return;
     }
@@ -203,12 +213,12 @@ function draw() {
 
     snake.forEach((segment, index) => {
         const gradient = ctx.createRadialGradient(
-            segment.x * GRID_SIZE + GRID_SIZE / 2,
-            segment.y * GRID_SIZE + GRID_SIZE / 2,
+            segment.x * currentGridSize + currentGridSize / 2,
+            segment.y * currentGridSize + currentGridSize / 2,
             0,
-            segment.x * GRID_SIZE + GRID_SIZE / 2,
-            segment.y * GRID_SIZE + GRID_SIZE / 2,
-            GRID_SIZE / 2
+            segment.x * currentGridSize + currentGridSize / 2,
+            segment.y * currentGridSize + currentGridSize / 2,
+            currentGridSize / 2
         );
 
         if (index === 0) {
@@ -222,36 +232,36 @@ function draw() {
 
         ctx.fillStyle = gradient;
         ctx.fillRect(
-            segment.x * GRID_SIZE + 1,
-            segment.y * GRID_SIZE + 1,
-            GRID_SIZE - 2,
-            GRID_SIZE - 2
+            segment.x * currentGridSize + 1,
+            segment.y * currentGridSize + 1,
+            currentGridSize - 2,
+            currentGridSize - 2
         );
 
         if (index === 0) {
             ctx.shadowColor = '#00ff00';
             ctx.shadowBlur = 15;
             ctx.fillRect(
-                segment.x * GRID_SIZE + 1,
-                segment.y * GRID_SIZE + 1,
-                GRID_SIZE - 2,
-                GRID_SIZE - 2
+                segment.x * currentGridSize + 1,
+                segment.y * currentGridSize + 1,
+                currentGridSize - 2,
+                currentGridSize - 2
             );
             ctx.shadowBlur = 0;
         }
     });
 
     const pulseScale = 1 + Math.sin(Date.now() / 200) * 0.1;
-    const foodSize = (GRID_SIZE - 2) * pulseScale;
-    const foodOffset = (GRID_SIZE - foodSize) / 2;
+    const foodSize = (currentGridSize - 2) * pulseScale;
+    const foodOffset = (currentGridSize - foodSize) / 2;
 
     const foodGradient = ctx.createRadialGradient(
-        food.x * GRID_SIZE + GRID_SIZE / 2,
-        food.y * GRID_SIZE + GRID_SIZE / 2,
+        food.x * currentGridSize + currentGridSize / 2,
+        food.y * currentGridSize + currentGridSize / 2,
         0,
-        food.x * GRID_SIZE + GRID_SIZE / 2,
-        food.y * GRID_SIZE + GRID_SIZE / 2,
-        GRID_SIZE / 2
+        food.x * currentGridSize + currentGridSize / 2,
+        food.y * currentGridSize + currentGridSize / 2,
+        currentGridSize / 2
     );
     foodGradient.addColorStop(0, '#ff6666');
     foodGradient.addColorStop(1, '#ff0000');
@@ -260,8 +270,8 @@ function draw() {
     ctx.shadowColor = '#ff0000';
     ctx.shadowBlur = 10;
     ctx.fillRect(
-        food.x * GRID_SIZE + foodOffset,
-        food.y * GRID_SIZE + foodOffset,
+        food.x * currentGridSize + foodOffset,
+        food.y * currentGridSize + foodOffset,
         foodSize,
         foodSize
     );
@@ -319,7 +329,7 @@ function update() {
         }
 
         if (particlesEnabled) {
-            createParticles(food.x * GRID_SIZE + GRID_SIZE / 2, food.y * GRID_SIZE + GRID_SIZE / 2);
+            createParticles(food.x * currentGridSize + currentGridSize / 2, food.y * currentGridSize + currentGridSize / 2);
         }
 
         if (score % 50 === 0 && currentFPS < 20) {
@@ -419,6 +429,15 @@ function showMilestoneEffect() {
 function showSizeReductionEffect() {
     // Play congratulation sound
     playSound('congratulation');
+    
+    // Show HTML notification
+    const notification = document.getElementById('sizeReductionNotification');
+    if (notification) {
+        notification.style.display = 'block';
+        setTimeout(() => {
+            notification.style.display = 'none';
+        }, 3000);
+    }
     
     // Create falling particles with "congratulations" text
     const text = "CONGRATULATIONS!";
@@ -664,10 +683,10 @@ canvas.addEventListener('touchend', (e) => {
     const rect = canvas.getBoundingClientRect();
     const touchEndX = e.changedTouches[0].clientX - rect.left;
     const touchEndY = e.changedTouches[0].clientY - rect.top;
-    handleSwipe(rect);
+    handleSwipe(touchEndX, touchEndY, rect);
 }, { passive: false });
 
-function handleSwipe(rect) {
+function handleSwipe(touchEndX, touchEndY, rect) {
     const scaleX = originalCanvasWidth / rect.width;
     const scaleY = originalCanvasHeight / rect.height;
     const deltaX = (touchEndX - touchStartX) * scaleX;
@@ -694,8 +713,8 @@ canvas.addEventListener('click', (e) => {
     const mouseX = (e.clientX - rect.left) * scaleX;
     const mouseY = (e.clientY - rect.top) * scaleY;
 
-    const headX = snake[0].x * GRID_SIZE + GRID_SIZE / 2;
-    const headY = snake[0].y * GRID_SIZE + GRID_SIZE / 2;
+    const headX = snake[0].x * currentGridSize + currentGridSize / 2;
+    const headY = snake[0].y * currentGridSize + currentGridSize / 2;
 
     const dx = mouseX - headX;
     const dy = mouseY - headY;

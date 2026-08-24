@@ -51,4 +51,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[1.0.0]: https://github.com/YOUR_USERNAME/snake-game/releases/tag/v1.0.0
+[1.0.0]: https://github.com/owilioduor-a11y/snake-game/releases/tag/v1.0.0

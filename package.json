@@ -21,13 +21,13 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/YOUR_USERNAME/snake-game.git"
+    "url": "git+https://github.com/owilioduor-a11y/snake-game.git"
   },
   "bugs": {
-    "url": "https://github.com/YOUR_USERNAME/snake-game/issues"
+    "url": "https://github.com/owilioduor-a11y/snake-game/issues"
   },
-  "homepage": "https://github.com/YOUR_USERNAME/snake-game#readme",
-  "note": "Replace YOUR_USERNAME with your actual GitHub username",
+  "homepage": "https://github.com/owilioduor-a11y/snake-game#readme",
+  "note": "Replace owilioduor-a11y with your actual GitHub username",
   "devDependencies": {},
   "dependencies": {}
 }

@@ -32,7 +32,7 @@ Enhancement suggestions are welcome! Please provide:
 1. **Fork the repository**
    ```bash
    # Fork the repository on GitHub, then clone your fork
-   git clone https://github.com/yourusername/snake-game.git
+   git clone https://github.com/owilioduor-a11y/snake-game.git
    cd snake-game
    ```
 

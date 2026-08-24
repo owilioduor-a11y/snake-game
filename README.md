@@ -49,11 +49,11 @@ A modern, feature-rich Snake game built with vanilla JavaScript, HTML5 Canvas, a
 ### Installation
 1. Clone the repository:
 ```bash
-git clone https://github.com/YOUR_USERNAME/snake-game.git
+git clone https://github.com/owilioduor-a11y/snake-game.git
 cd snake-game
 ```
 
-**Note**: Replace `YOUR_USERNAME` with your actual GitHub username when cloning.
+**Note**: Replace `owilioduor-a11y` with your actual GitHub username when cloning.
 
 2. Open `index.html` in your web browser
 
@@ -132,9 +132,9 @@ Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for de
 
 ## 📧 Contact
 
-- GitHub Issues: [Report bugs or request features](https://github.com/YOUR_USERNAME/snake-game/issues)
+- GitHub Issues: [Report bugs or request features](https://github.com/owilioduor-a11y/snake-game/issues)
 
-**Note**: Replace `YOUR_USERNAME` with your actual GitHub username.
+**Note**: Replace `owilioduor-a11y` with your actual GitHub username.
 
 ## 🙏 Acknowledgments
 
