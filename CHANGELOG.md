@@ -36,8 +36,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Particle effects toggle
 - Data reset functionality
 - Canvas-based rendering
-- Responsive grid sizing for different screen sizes
-- Mobile-optimized layout
+- Dynamic grid sizing with fixed cell size (20-25px)
+- 95% screen coverage for mobile devices
+- Mobile-optimized layout with touch-action: none
+- Dynamic viewport height (100dvh) support
+- Device pixel ratio support for retina displays
+- Dynamic canvas resolution based on container dimensions
+
+### Bug Fixes
+- Fixed ReferenceError in touch swipe handling
+- Fixed aspect ratio and drawing disconnect
+- Removed duplicate CSS selectors
+- Added missing HTML elements for notifications
 
 ## [Unreleased]
 
