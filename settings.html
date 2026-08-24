@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#2d2d44">
+    <title>Snake Game - Settings</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="settings-page">
+        <div class="settings-content">
+            <div class="settings-header">
+                <button class="back-btn" onclick="goToStart()">← Back</button>
+                <h1>⚙️ SETTINGS</h1>
+            </div>
+            
+            <div class="settings-section">
+                <h2>Difficulty Selection</h2>
+                <div class="difficulty-selector">
+                    <label class="difficulty-card active" data-difficulty="easy">
+                        <input type="checkbox" name="difficulty" value="easy" checked>
+                        <div class="difficulty-icon">
+                            <svg viewBox="0 0 100 100" width="50" height="50">
+                                <!-- Pink circle with checkmark -->
+                                <circle cx="50" cy="20" r="12" fill="#FF69B4"/>
+                                <path d="M44 20 L48 24 L56 16" stroke="black" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                <!-- Green speech bubble -->
+                                <path d="M10 35 Q10 30 15 30 L85 30 Q90 30 90 35 L90 75 Q90 80 85 80 L25 80 L15 90 L15 80 Q10 80 10 75 Z" fill="#90EE90" stroke="#32CD32" stroke-width="2"/>
+                                <!-- EASY text -->
+                                <text x="50" y="62" text-anchor="middle" font-size="14" font-weight="bold" fill="black" font-family="Arial, sans-serif">EASY</text>
+                            </svg>
+                        </div>
+                        <div class="difficulty-name">Easy</div>
+                        <div class="difficulty-desc">Slow speed, perfect for beginners</div>
+                        <div class="difficulty-stats">
+                            <span class="high-score-display">High Score: <span id="easyHighScore">0</span></span>
+                        </div>
+                    </label>
+                    <label class="difficulty-card" data-difficulty="medium">
+                        <input type="checkbox" name="difficulty" value="medium">
+                        <div class="difficulty-icon">⚡</div>
+                        <div class="difficulty-name">Medium</div>
+                        <div class="difficulty-desc">Balanced speed for experienced players</div>
+                        <div class="difficulty-stats">
+                            <span class="high-score-display">High Score: <span id="mediumHighScore">0</span></span>
+                        </div>
+                    </label>
+                    <label class="difficulty-card" data-difficulty="hard">
+                        <input type="checkbox" name="difficulty" value="hard">
+                        <div class="difficulty-icon">🔥</div>
+                        <div class="difficulty-name">Hard</div>
+                        <div class="difficulty-desc">Fast speed for ultimate challenge</div>
+                        <div class="difficulty-stats">
+                            <span class="high-score-display">High Score: <span id="hardHighScore">0</span></span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h2>Game Preferences</h2>
+                <div class="preference-item">
+                    <div class="preference-info">
+                        <span class="preference-icon">🔊</span>
+                        <span class="preference-label">Sound Effects</span>
+                    </div>
+                    <button class="toggle-btn" id="soundToggle" onclick="toggleSound()">
+                        <span class="toggle-track"></span>
+                        <span class="toggle-thumb"></span>
+                    </button>
+                </div>
+                <div class="preference-item">
+                    <div class="preference-info">
+                        <span class="preference-icon">📳</span>
+                        <span class="preference-label">Screen Shake</span>
+                    </div>
+                    <button class="toggle-btn active" id="shakeToggle" onclick="toggleShake()">
+                        <span class="toggle-track"></span>
+                        <span class="toggle-thumb"></span>
+                    </button>
+                </div>
+                <div class="preference-item">
+                    <div class="preference-info">
+                        <span class="preference-icon">✨</span>
+                        <span class="preference-label">Particle Effects</span>
+                    </div>
+                    <button class="toggle-btn active" id="particlesToggle" onclick="toggleParticles()">
+                        <span class="toggle-track"></span>
+                        <span class="toggle-thumb"></span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h2>Statistics</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <span class="stat-icon">🎮</span>
+                        <span class="stat-number" id="totalGames">0</span>
+                        <span class="stat-label">Total Games</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-icon">
+                            <svg viewBox="0 0 100 100" width="40" height="40">
+                                <!-- Clipboard body -->
+                                <rect x="20" y="15" width="60" height="75" rx="5" fill="#FFFFFF" stroke="#4169E1" stroke-width="2"/>
+                                <!-- Clip at top -->
+                                <rect x="35" y="8" width="30" height="12" rx="2" fill="#4A4A4A"/>
+                                <rect x="40" y="12" width="20" height="4" rx="1" fill="#6A6A6A"/>
+                                <!-- Score text -->
+                                <text x="50" y="45" text-anchor="middle" font-size="10" font-weight="bold" fill="#4169E1" font-family="Arial, sans-serif">Score</text>
+                                <!-- Table lines -->
+                                <line x1="30" y1="55" x2="70" y2="55" stroke="#CCCCCC" stroke-width="1"/>
+                                <line x1="30" y1="62" x2="70" y2="62" stroke="#CCCCCC" stroke-width="1"/>
+                                <line x1="30" y1="69" x2="70" y2="69" stroke="#CCCCCC" stroke-width="1"/>
+                                <line x1="30" y1="76" x2="70" y2="76" stroke="#CCCCCC" stroke-width="1"/>
+                            </svg>
+                        </span>
+                        <span class="stat-number" id="totalScore">0</span>
+                        <span class="stat-label">Total Score</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-icon">🏆</span>
+                        <span class="stat-number" id="achievementCount">0/8</span>
+                        <span class="stat-label">Achievements</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-icon">⚡</span>
+                        <span class="stat-number" id="bestCombo">0x</span>
+                        <span class="stat-label">Best Combo</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h2>Achievements</h2>
+                <div class="achievements-grid" id="achievementsGrid">
+                    <!-- Achievements will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="settings-section danger-zone">
+                <h2>Danger Zone</h2>
+                <button class="danger-btn" onclick="resetAllData()">
+                    <span class="btn-icon">🗑️</span>
+                    <span class="btn-text">Reset All Data</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    <script src="game-data.js"></script>
+    <script src="settings.js"></script>
+</body>
+</html>

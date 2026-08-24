@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#2d2d44">
+    <title>Snake Game - Start</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+</head>
+<body>
+    <div class="start-page">
+        <div class="start-screen-content">
+            <div class="game-logo">
+                <span class="logo-icon">🐍</span>
+                <h1>SNAKE COMBO</h1>
+                <p class="tagline">Classic Arcade Experience</p>
+            </div>
+            <div class="game-info">
+                <div class="info-item">
+                    <span class="info-icon">🎮</span>
+                    <span>Arrow Keys • Click • Swipe</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-icon">⚡</span>
+                    <span>Combos • Power-ups • Challenges</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-icon">🏆</span>
+                    <span>Achievements • High Scores</span>
+                </div>
+            </div>
+            <div class="menu-buttons">
+                <button class="menu-btn primary" onclick="startGame()">
+                    <span class="btn-icon">▶</span>
+                    <span class="btn-text">START GAME</span>
+                </button>
+                <button class="menu-btn secondary" onclick="goToSettings()">
+                    <span class="btn-icon">⚙️</span>
+                    <span class="btn-text">SETTINGS</span>
+                </button>
+            </div>
+            <div class="quick-stats">
+                <div class="stat-item">
+                    <span class="stat-label">Total Games</span>
+                    <span class="stat-value" id="totalGames">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Total Score</span>
+                    <span class="stat-value" id="totalScore">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Achievements</span>
+                    <span class="stat-value" id="achievementCount">0/8</span>
+                </div>
+            </div>
+        </div>
+       <footer>
+          <div class="copyright-footer">
+            <p>&copy; <span id="current-year"></span> Snake game. All rights reserved.</p>
+         </div>
+     </footer>
+    </div>
+    <script src="game-data.js"></script>
+    <script src="index.js"></script>
+</body>
+</html>

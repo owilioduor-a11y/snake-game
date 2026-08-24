@@ -1,0 +1,15 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Source files
+*.html text eol=lf
+*.css text eol=lf
+*.js text eol=lf
+*.md text eol=lf
+
+# Make sure these files are normalized to LF
+*.gitattributes text eol=lf
+.gitignore text eol=lf
+LICENSE text eol=lf
+CONTRIBUTING.md text eol=lf
+README.md text eol=lf

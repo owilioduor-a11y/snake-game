@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#2d2d44">
+    <title>Snake Game - Playing</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="game-page">
+        <nav class="game-nav">
+            <div class="nav-section">
+                <button class="back-btn" onclick="goToStart()">← Back</button>
+            </div>
+            <div class="nav-section">
+                <div class="score-display">
+                    <span>Score: <span id="score">0</span></span>
+                    <span class="high-score">High: <span id="highScore">0</span></span>
+                    <span class="combo-display">Combo: <span id="combo">0</span>x</span>
+                </div>
+            </div>
+            <div class="nav-section">
+                <button id="pauseBtn" class="pause-btn" onclick="togglePause()">⏸️ Pause</button>
+                <button id="soundToggle" class="sound-toggle" onclick="toggleSound()">🔊</button>
+            </div>
+        </nav>
+        <div id="gameContainer">
+            <canvas id="gameCanvas"></canvas>
+            <div id="instructions">
+                Click/tap or swipe to control the snake • Eat red food to grow • Avoid walls and yourself
+            </div>
+        </div>
+    </div>
+    <script src="game-data.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+{
+  "name": "snake-combo",
+  "version": "1.0.0",
+  "description": "A modern, feature-rich Snake game built with vanilla JavaScript, HTML5 Canvas, and CSS3",
+  "main": "index.html",
+  "scripts": {
+    "start": "python -m http.server 8000",
+    "dev": "python -m http.server 8000"
+  },
+  "keywords": [
+    "snake",
+    "game",
+    "javascript",
+    "canvas",
+    "html5",
+    "browser-game",
+    "arcade",
+    "retro"
+  ],
+  "author": "Snake Game Contributors",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YOUR_USERNAME/snake-game.git"
+  },
+  "bugs": {
+    "url": "https://github.com/YOUR_USERNAME/snake-game/issues"
+  },
+  "homepage": "https://github.com/YOUR_USERNAME/snake-game#readme",
+  "note": "Replace YOUR_USERNAME with your actual GitHub username",
+  "devDependencies": {},
+  "dependencies": {}
+}

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#2d2d44">
+    <title>Snake Game - Game Over</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="gameover-page">
+        <div class="game-over-content">
+            <div class="game-over-header">
+                <span class="game-over-icon">💀</span>
+                <h2>GAME OVER!</h2>
+            </div>
+            <div class="score-breakdown">
+                <div class="score-row">
+                    <span class="score-label">Final Score</span>
+                    <span class="score-value" id="finalScore">0</span>
+                </div>
+                <div class="score-row">
+                    <span class="score-label">High Score</span>
+                    <span class="score-value high-score" id="highScore">0</span>
+                </div>
+                <div class="score-row">
+                    <span class="score-label">Max Combo</span>
+                    <span class="score-value" id="maxCombo">0x</span>
+                </div>
+                <div class="score-row">
+                    <span class="score-label">Difficulty</span>
+                    <span class="score-value" id="difficulty">Easy</span>
+                </div>
+                <div class="achievements-list" id="achievementsList"></div>
+            </div>
+            <div class="game-over-actions">
+                <button class="action-btn primary" onclick="playAgain()">
+                    <span class="btn-icon">🔄</span>
+                    <span class="btn-text">Play Again</span>
+                </button>
+                <button class="action-btn secondary" onclick="goToStart()">
+                    <span class="btn-icon">🏠</span>
+                    <span class="btn-text">Main Menu</span>
+                </button>
+                <button class="action-btn tertiary" onclick="goToSettings()">
+                    <span class="btn-icon">⚙️</span>
+                    <span class="btn-text">Settings</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    <script src="game-data.js"></script>
+    <script src="gameover.js"></script>
+</body>
+</html>
