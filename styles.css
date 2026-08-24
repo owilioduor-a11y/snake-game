@@ -345,11 +345,24 @@ body {
     }
 }
 
+/* 95% screen coverage for mobile optimization */
+@media (max-width: 480px) {
+    #gameContainer {
+        max-height: 95vh;
+    }
+    
+    @supports (height: 100dvh) {
+        #gameContainer {
+            max-height: 95dvh;
+        }
+    }
+}
+
 @media (max-width: 768px) {
     #gameContainer {
-        height: 100vh;
-        max-height: 100vh;
-        padding: 10px 10px 10vh 10px;
+        height: 95vh;
+        max-height: 95vh;
+        padding: 10px;
         justify-content: flex-start;
         box-sizing: border-box;
         touch-action: none;
@@ -357,23 +370,15 @@ body {
 
     @supports (height: 100dvh) {
         #gameContainer {
-            height: 100dvh;
-            max-height: 100dvh;
-            padding: 10px 10px 10dvh 10px;
+            height: 95dvh;
+            max-height: 95dvh;
         }
     }
 
     #gameCanvas {
-        height: 100vh;
         width: 100%;
         object-fit: contain;
         touch-action: none;
-    }
-
-    @supports (height: 100dvh) {
-        #gameCanvas {
-            height: 100dvh;
-        }
     }
 }
 

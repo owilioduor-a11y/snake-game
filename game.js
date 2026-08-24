@@ -77,7 +77,7 @@ function setupCanvas() {
     const container = document.getElementById('gameContainer');
     const navHeight = document.querySelector('.game-nav').offsetHeight;
     
-    // Dynamic viewport sizing for mobile optimization
+    // Dynamic viewport sizing for mobile optimization - 95% screen coverage
     let heightPercentage = 0.75; // Default for larger screens
     let marginSize = 30;
     let prioritizeHeight = false;
@@ -111,56 +111,36 @@ function setupCanvas() {
     const containerWidth = Math.min(window.innerWidth - marginSize, container.clientWidth - marginSize);
     const containerHeight = Math.min(availableHeight, viewportHeight * heightPercentage);
     
+    // Use container's actual client dimensions for dynamic grid sizing
+    const actualContainerWidth = container.clientWidth || containerWidth;
+    const actualContainerHeight = container.clientHeight || containerHeight;
+    
     // Calculate canvas resolution with device pixel ratio for retina displays
     const dpr = window.devicePixelRatio || 1;
-    let newWidth, newHeight;
-    
-    if (prioritizeHeight) {
-        // On mobile, use actual container dimensions
-        newWidth = Math.floor(containerWidth * dpr);
-        newHeight = Math.floor(containerHeight * dpr);
-    } else {
-        // On desktop, scale from original dimensions
-        newWidth = originalCanvasWidth;
-        newHeight = originalCanvasHeight;
-        
-        if (containerWidth < originalCanvasWidth) {
-            const scale = containerWidth / originalCanvasWidth;
-            newWidth = Math.floor(containerWidth * dpr);
-            newHeight = Math.floor(originalCanvasHeight * scale * dpr);
-        }
-        
-        if (containerHeight < newHeight / dpr) {
-            const scale = containerHeight / (newHeight / dpr);
-            newHeight = Math.floor(containerHeight * dpr);
-            newWidth = Math.floor(newWidth * scale);
-        }
-    }
+    const canvasWidth = Math.floor(actualContainerWidth * dpr);
+    const canvasHeight = Math.floor(actualContainerHeight * dpr);
     
     // Set canvas resolution
-    canvas.width = newWidth;
-    canvas.height = newHeight;
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
     
-    // Update grid size dynamically based on new canvas dimensions
-    const pixelRatio = dpr;
-    const logicalWidth = newWidth / pixelRatio;
-    const logicalHeight = newHeight / pixelRatio;
+    // Set display size
+    canvas.style.width = actualContainerWidth + 'px';
+    canvas.style.height = actualContainerHeight + 'px';
     
-    // Calculate grid dimensions based on current grid size
+    // Dynamic cell sizing: Use fixed cell size (20-25px) and derive grid dimensions
+    // Keep currentGridSize as the fixed cell size (already set by updateGridSize)
+    const logicalWidth = canvasWidth / dpr;
+    const logicalHeight = canvasHeight / dpr;
+    
+    // Derive GRID_COLUMNS and GRID_ROWS from container dimensions and fixed cell size
     GRID_WIDTH = Math.floor(logicalWidth / currentGridSize);
     GRID_HEIGHT = Math.floor(logicalHeight / currentGridSize);
     
-    // Set display size
-    canvas.style.width = logicalWidth + 'px';
-    canvas.style.height = logicalHeight + 'px';
-    
-    // Ensure minimum size for playability
-    const minSize = 240;
-    if (logicalWidth < minSize) {
-        const scale = minSize / logicalWidth;
-        canvas.style.width = minSize + 'px';
-        canvas.style.height = (logicalHeight * scale) + 'px';
-    }
+    // Ensure minimum grid dimensions for playability
+    const minGridSize = 8;
+    if (GRID_WIDTH < minGridSize) GRID_WIDTH = minGridSize;
+    if (GRID_HEIGHT < minGridSize) GRID_HEIGHT = minGridSize;
 }
 
 function spawnFood() {
@@ -767,12 +747,26 @@ document.addEventListener('keydown', (e) => {
     e.preventDefault();
 });
 
-// Window resize
+// Window resize and viewport changes
 let resizeTimeout;
 window.addEventListener('resize', () => {
     clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(setupCanvas, 100);
+    resizeTimeout = setTimeout(() => {
+        updateGridSize();
+        setupCanvas();
+    }, 100);
 });
+
+// Handle mobile viewport changes (address bar, keyboard, etc.)
+if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            updateGridSize();
+            setupCanvas();
+        }, 100);
+    });
+}
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {

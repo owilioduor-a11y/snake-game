@@ -52,10 +52,12 @@ Since this is a vanilla JavaScript project with no build process:
 
 ### Important Notes
 - Game auto-starts after 500ms delay in game.js
-- Canvas dimensions: 1200x900 (original), responsive scaling
-- Grid size adapts based on screen width (22-28px)
+- Canvas dimensions: Dynamic based on container size with devicePixelRatio for retina displays
+- Grid size adapts based on screen width (22-28px) as fixed cell size
+- Grid dimensions (GRID_WIDTH, GRID_HEIGHT) derived dynamically from container dimensions
 - External dependency: Font Awesome CDN for icons
 - No backend required - runs entirely client-side
+- Mobile optimized with 95% screen coverage, touch-action: none, and dynamic viewport height (100dvh)
 
 ### Browser Compatibility
 - Chrome/Edge: Full support
