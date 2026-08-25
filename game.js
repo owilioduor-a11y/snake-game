@@ -757,6 +757,15 @@ window.addEventListener('resize', () => {
     }, 100);
 });
 
+// Handle screen orientation changes for unified dynamic grid calculation
+window.addEventListener('orientationchange', () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+        updateGridSize();
+        setupCanvas();
+    }, 100);
+});
+
 // Handle mobile viewport changes (address bar, keyboard, etc.)
 if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', () => {

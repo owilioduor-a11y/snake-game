@@ -32,9 +32,14 @@ Enhancement suggestions are welcome! Please provide:
 1. **Fork the repository**
    ```bash
    # Fork the repository on GitHub, then clone your fork
-   git clone https://github.com/owilioduor-a11y/snake-game.git
+   git clone https://github.com/YOUR_USERNAME/snake-game.git
    cd snake-game
+   
+   # Add the upstream repository to keep your fork in sync
+   git remote add upstream https://github.com/UPSTREAM_OWNER/snake-game.git
    ```
+   
+   **Note**: Replace `YOUR_USERNAME` with your GitHub username and `UPSTREAM_OWNER` with the original repository owner. This setup allows you to push to your fork (origin) while keeping it synced with the upstream repository.
 
 2. **Create a feature branch**
    ```bash
