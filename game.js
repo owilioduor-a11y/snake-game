@@ -752,8 +752,7 @@ let resizeTimeout;
 window.addEventListener('resize', () => {
     clearTimeout(resizeTimeout);
     resizeTimeout = setTimeout(() => {
-        updateGridSize();
-        setupCanvas();
+        handleResize();
     }, 100);
 });
 
@@ -761,8 +760,7 @@ window.addEventListener('resize', () => {
 window.addEventListener('orientationchange', () => {
     clearTimeout(resizeTimeout);
     resizeTimeout = setTimeout(() => {
-        updateGridSize();
-        setupCanvas();
+        handleResize();
     }, 100);
 });
 
@@ -771,10 +769,47 @@ if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', () => {
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(() => {
-            updateGridSize();
-            setupCanvas();
+            handleResize();
         }, 100);
     });
+}
+
+// Handle resize with clamping to keep snake and food within new boundaries
+function handleResize() {
+    // Store old grid dimensions for comparison
+    const oldGridWidth = GRID_WIDTH;
+    const oldGridHeight = GRID_HEIGHT;
+    
+    updateGridSize();
+    setupCanvas();
+    
+    // Clamp snake segments to new grid boundaries
+    snake = snake.map(segment => ({
+        x: Math.min(segment.x, GRID_WIDTH - 1),
+        y: Math.min(segment.y, GRID_HEIGHT - 1)
+    }));
+    
+    // Remove duplicate segments if clamping caused overlaps
+    const uniqueSnake = [];
+    const seenPositions = new Set();
+    for (const segment of snake) {
+        const key = `${segment.x},${segment.y}`;
+        if (!seenPositions.has(key)) {
+            seenPositions.add(key);
+            uniqueSnake.push(segment);
+        }
+    }
+    snake = uniqueSnake;
+    
+    // Clamp or respawn food if outside new boundaries
+    if (food.x >= GRID_WIDTH || food.y >= GRID_HEIGHT) {
+        food = spawnFood();
+    }
+    
+    // Ensure snake head is still valid
+    if (snake.length === 0) {
+        snake = [{x: Math.floor(GRID_WIDTH / 2), y: Math.floor(GRID_HEIGHT / 2)}];
+    }
 }
 
 // Initialize
