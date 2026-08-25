@@ -8,53 +8,56 @@ const pauseBtn = document.getElementById('pauseBtn');
 const soundToggle = document.getElementById('soundToggle');
 
 const GRID_SIZE = 22;
-const originalCanvasWidth = 1200;
-const originalCanvasHeight = 900;
+const MIN_GRID_CELLS = 8;
 
-// Responsive grid size for better visibility on smaller devices
 let currentGridSize = GRID_SIZE;
+let logicalWidth = 0;
+let logicalHeight = 0;
 
 function updateGridSize() {
     if (window.innerWidth <= 360) {
-        currentGridSize = 28; // Larger grid on very small screens
+        currentGridSize = 28;
     } else if (window.innerWidth <= 480) {
-        currentGridSize = 26; // Larger grid on small screens
+        currentGridSize = 26;
     } else if (window.innerWidth <= 768) {
-        currentGridSize = 24; // Slightly larger on tablets
+        currentGridSize = 24;
     } else {
-        currentGridSize = GRID_SIZE; // Default on desktop
+        currentGridSize = GRID_SIZE;
     }
-    
-    // Grid dimensions will be calculated in setupCanvas based on actual canvas size
-    // This function just sets the cell size
+}
+
+function cellCenter(gridX, gridY) {
+    return {
+        x: gridX * currentGridSize + currentGridSize / 2,
+        y: gridY * currentGridSize + currentGridSize / 2
+    };
 }
 
 let GRID_WIDTH, GRID_HEIGHT;
 let snake, direction, nextDirection, food;
 let score, maxCombo, combo, comboTimer;
 let gameOver, gameStarted, isPaused, sizeReduced;
-let particles, screenShake, currentFPS;
+let particles, overlayParticles, screenShake, currentFPS;
 let gameLoop;
+let renderHandle = 0;
+let notificationHideTimer = 0;
 let audioContext;
 
-// Game settings
 let soundEnabled = gameData.isSoundEnabled();
 let shakeEnabled = gameData.isShakeEnabled();
 let particlesEnabled = gameData.areParticlesEnabled();
 let currentDifficulty = gameData.getCurrentDifficulty();
 
-// Initialize game
 function initGame() {
     updateGridSize();
     const difficultySettings = gameData.difficultySettings[currentDifficulty];
     currentFPS = difficultySettings.fps;
-    
-    // setupCanvas will handle canvas sizing
+
     setupCanvas();
-    
-    snake = [{x: Math.floor(GRID_WIDTH / 2), y: Math.floor(GRID_HEIGHT / 2)}];
-    direction = {x: 1, y: 0};
-    nextDirection = {x: 1, y: 0};
+
+    snake = [{ x: Math.floor(GRID_WIDTH / 2), y: Math.floor(GRID_HEIGHT / 2) }];
+    direction = { x: 1, y: 0 };
+    nextDirection = { x: 1, y: 0 };
     food = spawnFood();
     score = 0;
     maxCombo = 0;
@@ -64,83 +67,59 @@ function initGame() {
     isPaused = false;
     sizeReduced = false;
     particles = [];
+    overlayParticles = [];
     screenShake = 0;
-    
+
     scoreElement.textContent = '0';
     highScoreElement.textContent = gameData.getHighScore(currentDifficulty);
     comboElement.textContent = '0';
-    
-    draw();
 }
 
 function setupCanvas() {
     const container = document.getElementById('gameContainer');
-    const navHeight = document.querySelector('.game-nav').offsetHeight;
-    
-    // Dynamic viewport sizing for mobile optimization - 95% screen coverage
-    let heightPercentage = 0.75; // Default for larger screens
-    let marginSize = 30;
-    let prioritizeHeight = false;
-    
-    if (window.innerWidth <= 1400) {
-        heightPercentage = 0.8;
-        marginSize = 25;
-    }
-    if (window.innerWidth <= 1200) {
-        heightPercentage = 0.85;
-        marginSize = 20;
-    }
-    if (window.innerWidth <= 768) {
-        heightPercentage = 0.9;
-        marginSize = 15;
-    }
-    if (window.innerWidth <= 480) {
-        heightPercentage = 0.95; // 95% height on mobile devices
-        marginSize = 10;
-        prioritizeHeight = true; // Prioritize height on mobile
-    }
-    if (window.innerWidth <= 360) {
-        heightPercentage = 0.95; // Maintain 95% on very small screens
-        marginSize = 5;
-        prioritizeHeight = true;
-    }
-    
-    // Use dynamic viewport height for mobile browsers
-    const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-    const availableHeight = viewportHeight - navHeight - marginSize;
-    const containerWidth = Math.min(window.innerWidth - marginSize, container.clientWidth - marginSize);
-    const containerHeight = Math.min(availableHeight, viewportHeight * heightPercentage);
-    
-    // Use container's actual client dimensions for dynamic grid sizing
-    const actualContainerWidth = container.clientWidth || containerWidth;
-    const actualContainerHeight = container.clientHeight || containerHeight;
-    
-    // Calculate canvas resolution with device pixel ratio for retina displays
+    const gamePage = document.querySelector('.game-page');
+    const nav = document.querySelector('.game-nav');
+    const instructions = document.getElementById('instructions');
     const dpr = window.devicePixelRatio || 1;
-    const canvasWidth = Math.floor(actualContainerWidth * dpr);
-    const canvasHeight = Math.floor(actualContainerHeight * dpr);
-    
-    // Set canvas resolution
-    canvas.width = canvasWidth;
-    canvas.height = canvasHeight;
-    
-    // Set display size
-    canvas.style.width = actualContainerWidth + 'px';
-    canvas.style.height = actualContainerHeight + 'px';
-    
-    // Dynamic cell sizing: Use fixed cell size (20-25px) and derive grid dimensions
-    // Keep currentGridSize as the fixed cell size (already set by updateGridSize)
-    const logicalWidth = canvasWidth / dpr;
-    const logicalHeight = canvasHeight / dpr;
-    
-    // Derive GRID_COLUMNS and GRID_ROWS from container dimensions and fixed cell size
-    GRID_WIDTH = Math.floor(logicalWidth / currentGridSize);
-    GRID_HEIGHT = Math.floor(logicalHeight / currentGridSize);
-    
-    // Ensure minimum grid dimensions for playability
-    const minGridSize = 8;
-    if (GRID_WIDTH < minGridSize) GRID_WIDTH = minGridSize;
-    if (GRID_HEIGHT < minGridSize) GRID_HEIGHT = minGridSize;
+    const styles = getComputedStyle(container);
+    const padX = parseFloat(styles.paddingLeft) + parseFloat(styles.paddingRight);
+    const padY = parseFloat(styles.paddingTop) + parseFloat(styles.paddingBottom);
+    const instructionsVisible = instructions && getComputedStyle(instructions).display !== 'none';
+    const instructionsH = instructionsVisible ? instructions.offsetHeight + 10 : 0;
+    const viewportH = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    const viewportW = window.visualViewport ? window.visualViewport.width : window.innerWidth;
+    const fallbackW = Math.min(gamePage?.clientWidth || viewportW, viewportW) - padX;
+    const fallbackH = (gamePage?.clientHeight || viewportH) - (nav?.offsetHeight || 0) - padY - instructionsH;
+
+    const availW = Math.max(currentGridSize * MIN_GRID_CELLS, Math.max(container.clientWidth - padX, fallbackW));
+    const availH = Math.max(currentGridSize * MIN_GRID_CELLS, Math.max(container.clientHeight - padY - instructionsH, fallbackH));
+
+    GRID_WIDTH = Math.floor(availW / currentGridSize);
+    GRID_HEIGHT = Math.floor(availH / currentGridSize);
+
+    if (GRID_WIDTH < MIN_GRID_CELLS) {
+        currentGridSize = Math.max(12, Math.floor(availW / MIN_GRID_CELLS));
+        GRID_WIDTH = Math.floor(availW / currentGridSize);
+    }
+    if (GRID_HEIGHT < MIN_GRID_CELLS) {
+        currentGridSize = Math.max(12, Math.min(currentGridSize, Math.floor(availH / MIN_GRID_CELLS)));
+        GRID_WIDTH = Math.floor(availW / currentGridSize);
+        GRID_HEIGHT = Math.floor(availH / currentGridSize);
+    }
+
+    GRID_WIDTH = Math.max(MIN_GRID_CELLS, GRID_WIDTH);
+    GRID_HEIGHT = Math.max(MIN_GRID_CELLS, GRID_HEIGHT);
+
+    logicalWidth = GRID_WIDTH * currentGridSize;
+    logicalHeight = GRID_HEIGHT * currentGridSize;
+
+    canvas.style.width = `${logicalWidth}px`;
+    canvas.style.height = `${logicalHeight}px`;
+    canvas.width = Math.round(logicalWidth * dpr);
+    canvas.height = Math.round(logicalHeight * dpr);
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.imageSmoothingEnabled = false;
 }
 
 function spawnFood() {
@@ -155,11 +134,12 @@ function spawnFood() {
 }
 
 function draw() {
-    let shakeX = 0, shakeY = 0;
+    let shakeX = 0;
+    let shakeY = 0;
     if (screenShake > 0 && shakeEnabled) {
         shakeX = (Math.random() - 0.5) * screenShake;
         shakeY = (Math.random() - 0.5) * screenShake;
-        screenShake *= 0.9;
+        screenShake *= 0.92;
         if (screenShake < 0.5) screenShake = 0;
     }
 
@@ -167,13 +147,23 @@ function draw() {
     ctx.translate(shakeX, shakeY);
 
     ctx.fillStyle = '#000';
-    ctx.fillRect(-shakeX, -shakeY, canvas.width, canvas.height);
+    ctx.fillRect(-shakeX, -shakeY, logicalWidth, logicalHeight);
 
     if (!gameStarted) {
         ctx.fillStyle = '#00ff00';
-        ctx.fillRect(GRID_WIDTH/2 * currentGridSize + 1, GRID_HEIGHT/2 * currentGridSize + 1, currentGridSize - 2, currentGridSize - 2);
+        ctx.fillRect(
+            Math.floor(GRID_WIDTH / 2) * currentGridSize + 1,
+            Math.floor(GRID_HEIGHT / 2) * currentGridSize + 1,
+            currentGridSize - 2,
+            currentGridSize - 2
+        );
         ctx.fillStyle = '#ff3333';
-        ctx.fillRect((GRID_WIDTH/2 + 5) * currentGridSize + 1, GRID_HEIGHT/2 * currentGridSize + 1, currentGridSize - 2, currentGridSize - 2);
+        ctx.fillRect(
+            (Math.floor(GRID_WIDTH / 2) + 5) * currentGridSize + 1,
+            Math.floor(GRID_HEIGHT / 2) * currentGridSize + 1,
+            currentGridSize - 2,
+            currentGridSize - 2
+        );
         ctx.restore();
         return;
     }
@@ -192,14 +182,9 @@ function draw() {
     }
 
     snake.forEach((segment, index) => {
-        const gradient = ctx.createRadialGradient(
-            segment.x * currentGridSize + currentGridSize / 2,
-            segment.y * currentGridSize + currentGridSize / 2,
-            0,
-            segment.x * currentGridSize + currentGridSize / 2,
-            segment.y * currentGridSize + currentGridSize / 2,
-            currentGridSize / 2
-        );
+        const cx = segment.x * currentGridSize + currentGridSize / 2;
+        const cy = segment.y * currentGridSize + currentGridSize / 2;
+        const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, currentGridSize / 2);
 
         if (index === 0) {
             gradient.addColorStop(0, '#00ff00');
@@ -234,15 +219,10 @@ function draw() {
     const pulseScale = 1 + Math.sin(Date.now() / 200) * 0.1;
     const foodSize = (currentGridSize - 2) * pulseScale;
     const foodOffset = (currentGridSize - foodSize) / 2;
+    const foodCx = food.x * currentGridSize + currentGridSize / 2;
+    const foodCy = food.y * currentGridSize + currentGridSize / 2;
 
-    const foodGradient = ctx.createRadialGradient(
-        food.x * currentGridSize + currentGridSize / 2,
-        food.y * currentGridSize + currentGridSize / 2,
-        0,
-        food.x * currentGridSize + currentGridSize / 2,
-        food.y * currentGridSize + currentGridSize / 2,
-        currentGridSize / 2
-    );
+    const foodGradient = ctx.createRadialGradient(foodCx, foodCy, 0, foodCx, foodCy, currentGridSize / 2);
     foodGradient.addColorStop(0, '#ff6666');
     foodGradient.addColorStop(1, '#ff0000');
 
@@ -261,8 +241,29 @@ function draw() {
         ctx.fillStyle = '#ffcc00';
         ctx.font = 'bold 20px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText(`${combo}x COMBO!`, canvas.width / 2, 30);
+        ctx.fillText(`${combo}x COMBO!`, logicalWidth / 2, 30);
     }
+
+    overlayParticles = overlayParticles.filter(p => p.life > 0);
+    overlayParticles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life -= p.decay;
+        if (p.life <= 0) return;
+
+        ctx.globalAlpha = p.life;
+        ctx.fillStyle = p.color;
+        if (p.text) {
+            ctx.font = `bold ${p.size * 3}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.fillText(p.text, logicalWidth / 2, p.y);
+        } else {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    });
+    ctx.globalAlpha = 1;
 
     ctx.restore();
 }
@@ -270,7 +271,7 @@ function draw() {
 function update() {
     if (gameOver || isPaused) return;
 
-    direction = {...nextDirection};
+    direction = { ...nextDirection };
 
     const head = {
         x: snake[0].x + direction.x,
@@ -309,7 +310,8 @@ function update() {
         }
 
         if (particlesEnabled) {
-            createParticles(food.x * currentGridSize + currentGridSize / 2, food.y * currentGridSize + currentGridSize / 2);
+            const center = cellCenter(food.x, food.y);
+            createParticles(center.x, center.y);
         }
 
         if (score % 50 === 0 && currentFPS < 20) {
@@ -368,7 +370,6 @@ function endGame() {
         playSound('achievement');
     }
 
-    // Navigate to game over page with data
     const gameData_str = encodeURIComponent(JSON.stringify({
         score: score,
         highScore: gameData.getHighScore(currentDifficulty),
@@ -393,148 +394,72 @@ function createParticles(x, y) {
     }
 }
 
+function spawnOverlayParticles(text, count, decay) {
+    const colors = ['#FFD700', '#FFA500', '#FF6347', '#4CAF50', '#2196F3', '#9C27B0'];
+    for (let i = 0; i < count; i++) {
+        overlayParticles.push({
+            x: Math.random() * logicalWidth,
+            y: -30 - Math.random() * 180,
+            vx: (Math.random() - 0.5) * 4,
+            vy: Math.random() * 3 + 1.5,
+            size: Math.random() * 8 + 3,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            life: 1.0,
+            decay: decay,
+            text: i === 0 ? text : null
+        });
+    }
+}
+
 function showMilestoneEffect() {
     let flashCount = 0;
     const flashInterval = setInterval(() => {
         ctx.fillStyle = flashCount % 2 === 0 ? 'rgba(0, 255, 255, 0.2)' : 'rgba(0, 255, 255, 0.05)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillRect(0, 0, logicalWidth, logicalHeight);
         flashCount++;
         if (flashCount >= 4) {
             clearInterval(flashInterval);
-            draw();
         }
     }, 100);
 }
 
 function showSizeReductionEffect() {
-    // Play congratulation sound
     playSound('congratulation');
-    
-    // Show HTML notification
+
     const notification = document.getElementById('sizeReductionNotification');
     if (notification) {
-        notification.style.display = 'block';
-        setTimeout(() => {
-            notification.style.display = 'none';
+        notification.classList.add('visible');
+        clearTimeout(notificationHideTimer);
+        notificationHideTimer = setTimeout(() => {
+            notification.classList.remove('visible');
         }, 3000);
     }
-    
-    // Create falling particles with "congratulations" text
-    const text = "CONGRATULATIONS!";
-    const particles = [];
-    const colors = ['#FFD700', '#FFA500', '#FF6347', '#4CAF50', '#2196F3', '#9C27B0'];
-    
-    for (let i = 0; i < 50; i++) {
-        particles.push({
-            x: Math.random() * canvas.width,
-            y: -50 - Math.random() * 200,
-            vx: (Math.random() - 0.5) * 4,
-            vy: Math.random() * 3 + 2,
-            size: Math.random() * 8 + 4,
-            color: colors[Math.floor(Math.random() * colors.length)],
-            life: 1.0,
-            text: i === 0 ? text : null
-        });
-    }
-    
-    // Animate particles
-    const animateParticles = () => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        draw();
-        
-        particles.forEach((p, index) => {
-            p.x += p.vx;
-            p.y += p.vy;
-            p.life -= 0.008;
-            
-            if (p.life > 0) {
-                ctx.globalAlpha = p.life;
-                ctx.fillStyle = p.color;
-                
-                if (p.text) {
-                    ctx.font = `bold ${p.size * 3}px Arial`;
-                    ctx.textAlign = 'center';
-                    ctx.fillText(p.text, canvas.width / 2, p.y);
-                } else {
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            }
-        });
-        
-        ctx.globalAlpha = 1;
-        
-        if (particles.some(p => p.life > 0)) {
-            requestAnimationFrame(animateParticles);
-        } else {
-            draw();
-        }
-    };
-    
-    animateParticles();
+
+    spawnOverlayParticles('CONGRATULATIONS!', 50, 0.008);
 }
 
 function showComboEffect(comboCount) {
-    // Create falling particles with combo text
-    const text = `${comboCount}x COMBO!`;
-    const particles = [];
-    const colors = ['#FFD700', '#FFA500', '#FF6347', '#4CAF50', '#2196F3', '#9C27B0'];
-    
-    for (let i = 0; i < 30; i++) {
-        particles.push({
-            x: Math.random() * canvas.width,
-            y: -30 - Math.random() * 150,
-            vx: (Math.random() - 0.5) * 3,
-            vy: Math.random() * 2 + 1.5,
-            size: Math.random() * 6 + 3,
-            color: colors[Math.floor(Math.random() * colors.length)],
-            life: 1.0,
-            text: i === 0 ? text : null
-        });
-    }
-    
-    // Animate particles
-    const animateParticles = () => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        draw();
-        
-        particles.forEach((p, index) => {
-            p.x += p.vx;
-            p.y += p.vy;
-            p.life -= 0.01;
-            
-            if (p.life > 0) {
-                ctx.globalAlpha = p.life;
-                ctx.fillStyle = p.color;
-                
-                if (p.text) {
-                    ctx.font = `bold ${p.size * 3}px Arial`;
-                    ctx.textAlign = 'center';
-                    ctx.fillText(p.text, canvas.width / 2, p.y);
-                } else {
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            }
-        });
-        
-        ctx.globalAlpha = 1;
-        
-        if (particles.some(p => p.life > 0)) {
-            requestAnimationFrame(animateParticles);
-        } else {
-            draw();
-        }
-    };
-    
-    animateParticles();
+    spawnOverlayParticles(`${comboCount}x COMBO!`, 30, 0.01);
 }
 
 function gameStep() {
     update();
-    draw();
+}
+
+function startRenderLoop() {
+    if (renderHandle) return;
+    const frame = () => {
+        draw();
+        renderHandle = requestAnimationFrame(frame);
+    };
+    renderHandle = requestAnimationFrame(frame);
+}
+
+function stopRenderLoop() {
+    if (renderHandle) {
+        cancelAnimationFrame(renderHandle);
+        renderHandle = 0;
+    }
 }
 
 function startGame() {
@@ -542,13 +467,14 @@ function startGame() {
     playSound('click');
     gameStarted = true;
     pauseBtn.disabled = false;
+    if (gameLoop) clearInterval(gameLoop);
     gameLoop = setInterval(gameStep, 1000 / currentFPS);
 }
 
 function togglePause() {
     if (!gameStarted || gameOver) return;
     isPaused = !isPaused;
-    
+
     if (isPaused) {
         pauseBtn.textContent = '▶️ Resume';
         pauseBtn.classList.add('paused');
@@ -563,8 +489,8 @@ function togglePause() {
 function toggleSound() {
     soundEnabled = !soundEnabled;
     gameData.setSoundEnabled(soundEnabled);
-    const soundToggle = document.getElementById('soundToggle');
-    soundToggle.textContent = soundEnabled ? '🔊' : '🔇';
+    const toggle = document.getElementById('soundToggle');
+    toggle.textContent = soundEnabled ? '🔊' : '🔇';
     if (soundEnabled) initAudio();
 }
 
@@ -576,14 +502,14 @@ function initAudio() {
 
 function playSound(type) {
     if (!audioContext || !soundEnabled) return;
-    
+
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
-    
+
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
-    
-    switch(type) {
+
+    switch (type) {
         case 'eat':
             oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
             oscillator.frequency.exponentialRampToValueAtTime(1200, audioContext.currentTime + 0.1);
@@ -643,11 +569,21 @@ function playSound(type) {
 
 function goToStart() {
     if (gameLoop) clearInterval(gameLoop);
+    stopRenderLoop();
     window.location.href = 'index.html';
 }
 
-// Touch controls
-let touchStartX = 0, touchStartY = 0;
+function setNextDirection(x, y) {
+    if (!gameStarted || gameOver || isPaused) return;
+    if (x !== 0 && direction.x === 0) {
+        nextDirection = { x, y: 0 };
+    } else if (y !== 0 && direction.y === 0) {
+        nextDirection = { x: 0, y };
+    }
+}
+
+let touchStartX = 0;
+let touchStartY = 0;
 
 canvas.addEventListener('touchstart', (e) => {
     if (!gameStarted || gameOver || isPaused) return;
@@ -667,50 +603,60 @@ canvas.addEventListener('touchend', (e) => {
 }, { passive: false });
 
 function handleSwipe(touchEndX, touchEndY, rect) {
-    const scaleX = originalCanvasWidth / rect.width;
-    const scaleY = originalCanvasHeight / rect.height;
-    const deltaX = (touchEndX - touchStartX) * scaleX;
-    const deltaY = (touchEndY - touchStartY) * scaleY;
-    const minSwipeDistance = 20;
+    const deltaX = touchEndX - touchStartX;
+    const deltaY = touchEndY - touchStartY;
+    const minSwipeDistance = Math.max(20, Math.min(rect.width, rect.height) * 0.04);
 
     if (Math.abs(deltaX) < minSwipeDistance && Math.abs(deltaY) < minSwipeDistance) return;
 
     if (Math.abs(deltaX) > Math.abs(deltaY)) {
-        if (deltaX > 0 && direction.x === 0) nextDirection = {x: 1, y: 0};
-        else if (deltaX < 0 && direction.x === 0) nextDirection = {x: -1, y: 0};
+        setNextDirection(deltaX > 0 ? 1 : -1, 0);
     } else {
-        if (deltaY > 0 && direction.y === 0) nextDirection = {x: 0, y: 1};
-        else if (deltaY < 0 && direction.y === 0) nextDirection = {x: 0, y: -1};
+        setNextDirection(0, deltaY > 0 ? 1 : -1);
     }
 }
 
-// Mouse controls
 canvas.addEventListener('click', (e) => {
     if (!gameStarted || gameOver || isPaused) return;
     const rect = canvas.getBoundingClientRect();
-    const scaleX = originalCanvasWidth / rect.width;
-    const scaleY = originalCanvasHeight / rect.height;
-    const mouseX = (e.clientX - rect.left) * scaleX;
-    const mouseY = (e.clientY - rect.top) * scaleY;
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    const head = cellCenter(snake[0].x, snake[0].y);
+    const dx = mouseX - head.x;
+    const dy = mouseY - head.y;
 
-    const headX = snake[0].x * currentGridSize + currentGridSize / 2;
-    const headY = snake[0].y * currentGridSize + currentGridSize / 2;
-
-    const dx = mouseX - headX;
-    const dy = mouseY - headY;
-    const absDx = Math.abs(dx);
-    const absDy = Math.abs(dy);
-
-    if (absDx > absDy) {
-        if (dx > 0 && direction.x === 0) nextDirection = {x: 1, y: 0};
-        else if (dx < 0 && direction.x === 0) nextDirection = {x: -1, y: 0};
+    if (Math.abs(dx) > Math.abs(dy)) {
+        setNextDirection(dx > 0 ? 1 : -1, 0);
     } else {
-        if (dy > 0 && direction.y === 0) nextDirection = {x: 0, y: 1};
-        else if (dy < 0 && direction.y === 0) nextDirection = {x: 0, y: -1};
+        setNextDirection(0, dy > 0 ? 1 : -1);
     }
 });
 
-// Keyboard controls
+function bindDpadControls() {
+    const controls = [
+        { id: 'btnUp', x: 0, y: -1 },
+        { id: 'btnDown', x: 0, y: 1 },
+        { id: 'btnLeft', x: -1, y: 0 },
+        { id: 'btnRight', x: 1, y: 0 }
+    ];
+
+    controls.forEach(({ id, x, y }) => {
+        const button = document.getElementById(id);
+        if (!button) return;
+
+        button.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setNextDirection(x, y);
+        }, { passive: false });
+
+        button.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            setNextDirection(x, y);
+        });
+    });
+}
+
 document.addEventListener('keydown', (e) => {
     if (e.code === 'Space' && !gameStarted) {
         startGame();
@@ -726,106 +672,92 @@ document.addEventListener('keydown', (e) => {
 
     if (isPaused) return;
 
-    switch(e.code) {
+    switch (e.code) {
         case 'ArrowUp':
         case 'KeyW':
-            if (direction.y === 0) nextDirection = {x: 0, y: -1};
+            setNextDirection(0, -1);
             break;
         case 'ArrowDown':
         case 'KeyS':
-            if (direction.y === 0) nextDirection = {x: 0, y: 1};
+            setNextDirection(0, 1);
             break;
         case 'ArrowLeft':
         case 'KeyA':
-            if (direction.x === 0) nextDirection = {x: -1, y: 0};
+            setNextDirection(-1, 0);
             break;
         case 'ArrowRight':
         case 'KeyD':
-            if (direction.x === 0) nextDirection = {x: 1, y: 0};
+            setNextDirection(1, 0);
             break;
+        default:
+            return;
     }
     e.preventDefault();
 });
 
-// Window resize and viewport changes
 let resizeTimeout;
-window.addEventListener('resize', () => {
+function scheduleResize() {
     clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(() => {
-        handleResize();
-    }, 100);
-});
-
-// Handle screen orientation changes for unified dynamic grid calculation
-window.addEventListener('orientationchange', () => {
-    clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(() => {
-        handleResize();
-    }, 100);
-});
-
-// Handle mobile viewport changes (address bar, keyboard, etc.)
-if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', () => {
-        clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(() => {
-            handleResize();
-        }, 100);
-    });
+    resizeTimeout = setTimeout(handleResize, 100);
 }
 
-// Handle resize with clamping to keep snake and food within new boundaries
+window.addEventListener('resize', scheduleResize);
+window.addEventListener('orientationchange', scheduleResize);
+if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', scheduleResize);
+}
+
+function clampCoord(value, max) {
+    return Math.max(0, Math.min(value, max));
+}
+
 function handleResize() {
-    // Store old grid dimensions for comparison
-    const oldGridWidth = GRID_WIDTH;
-    const oldGridHeight = GRID_HEIGHT;
-    
     updateGridSize();
     setupCanvas();
-    
-    // Clamp snake segments to new grid boundaries
-    snake = snake.map(segment => ({
-        x: Math.min(segment.x, GRID_WIDTH - 1),
-        y: Math.min(segment.y, GRID_HEIGHT - 1)
-    }));
-    
-    // Remove duplicate segments if clamping caused overlaps
-    const uniqueSnake = [];
-    const seenPositions = new Set();
-    for (const segment of snake) {
-        const key = `${segment.x},${segment.y}`;
-        if (!seenPositions.has(key)) {
-            seenPositions.add(key);
-            uniqueSnake.push(segment);
+
+    if (!snake || snake.length === 0) {
+        snake = [{ x: Math.floor(GRID_WIDTH / 2), y: Math.floor(GRID_HEIGHT / 2) }];
+    } else {
+        snake = snake.map(segment => ({
+            x: clampCoord(segment.x, GRID_WIDTH - 1),
+            y: clampCoord(segment.y, GRID_HEIGHT - 1)
+        }));
+
+        const uniqueSnake = [];
+        const seenPositions = new Set();
+        for (const segment of snake) {
+            const key = `${segment.x},${segment.y}`;
+            if (!seenPositions.has(key)) {
+                seenPositions.add(key);
+                uniqueSnake.push(segment);
+            }
         }
+        snake = uniqueSnake.length ? uniqueSnake : [{ x: Math.floor(GRID_WIDTH / 2), y: Math.floor(GRID_HEIGHT / 2) }];
     }
-    snake = uniqueSnake;
-    
-    // Clamp or respawn food if outside new boundaries
-    if (food.x >= GRID_WIDTH || food.y >= GRID_HEIGHT) {
+
+    if (!food || food.x < 0 || food.x >= GRID_WIDTH || food.y < 0 || food.y >= GRID_HEIGHT) {
         food = spawnFood();
-    }
-    
-    // Ensure snake head is still valid
-    if (snake.length === 0) {
-        snake = [{x: Math.floor(GRID_WIDTH / 2), y: Math.floor(GRID_HEIGHT / 2)}];
+    } else if (snake.some(segment => segment.x === food.x && segment.y === food.y)) {
+        food = spawnFood();
     }
 }
 
-// Initialize
 document.addEventListener('DOMContentLoaded', () => {
-    const soundToggle = document.getElementById('soundToggle');
     if (soundToggle) {
         soundToggle.textContent = soundEnabled ? '🔊' : '🔇';
     }
-    
+
     if (pauseBtn) {
         pauseBtn.disabled = true;
     }
-    
+
+    bindDpadControls();
     initGame();
-    
-    // Auto-start game
+    startRenderLoop();
+    requestAnimationFrame(() => {
+        handleResize();
+    });
+
     setTimeout(() => {
         startGame();
     }, 500);

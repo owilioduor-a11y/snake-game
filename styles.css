@@ -12,6 +12,7 @@
 
 html, body {
     height: 100%;
+    height: 100dvh;
     overflow: hidden;
     overscroll-behavior: none;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -25,6 +26,7 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
+    min-height: 100dvh;
     margin: 0;
     padding: 10px;
 }
@@ -40,6 +42,7 @@ body {
     width: 100%;
     max-width: 1100px;
     max-height: 100vh;
+    max-height: 100dvh;
     background: linear-gradient(145deg, #2d2d44 0%, #1a1a2e 100%);
     border-radius: 20px;
     display: flex;
@@ -51,6 +54,14 @@ body {
 
 .game-page {
     padding: 10px;
+    overflow: hidden;
+    width: 95%;
+    max-width: 1100px;
+    height: 95vh;
+    height: 95dvh;
+    max-height: 95vh;
+    max-height: 95dvh;
+    align-self: center;
 }
 
 /* Start Page Styles */
@@ -339,51 +350,8 @@ body {
     min-height: 0;
     position: relative;
     transition: transform 0.1s;
-    max-height: calc(100vh - 80px);
+    width: 100%;
     touch-action: none;
-}
-
-@supports (height: 100dvh) {
-    #gameContainer {
-        max-height: calc(100dvh - 80px);
-    }
-}
-
-/* 95% screen coverage for mobile optimization */
-@media (max-width: 480px) {
-    #gameContainer {
-        max-height: 95vh;
-    }
-    
-    @supports (height: 100dvh) {
-        #gameContainer {
-            max-height: 95dvh;
-        }
-    }
-}
-
-@media (max-width: 768px) {
-    #gameContainer {
-        height: 95vh;
-        max-height: 95vh;
-        padding: 10px;
-        justify-content: flex-start;
-        box-sizing: border-box;
-        touch-action: none;
-    }
-
-    @supports (height: 100dvh) {
-        #gameContainer {
-            height: 95dvh;
-            max-height: 95dvh;
-        }
-    }
-
-    #gameCanvas {
-        width: 100%;
-        object-fit: contain;
-        touch-action: none;
-    }
 }
 
 #gameContainer.shake {
@@ -397,9 +365,10 @@ body {
 }
 
 #gameCanvas {
-    background: #ffffff;
+    background: #000000;
     display: block;
     touch-action: none;
+    image-rendering: pixelated;
 }
 
 #instructions {
@@ -423,6 +392,66 @@ body {
     display: none;
     z-index: 100;
     max-width: 90vw;
+    pointer-events: none;
+}
+
+#sizeReductionNotification.visible {
+    display: block;
+}
+
+.dpad-container {
+    display: none;
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    pointer-events: none;
+}
+
+.dpad-middle-row {
+    display: flex;
+    gap: 52px;
+}
+
+.dpad-btn {
+    pointer-events: auto;
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    border: 2px solid rgba(76, 175, 80, 0.7);
+    background: rgba(10, 12, 24, 0.55);
+    color: #4ade80;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.dpad-btn:active {
+    background: rgba(76, 175, 80, 0.45);
+    transform: scale(0.96);
+}
+
+@media (max-width: 768px), (pointer: coarse) {
+    .dpad-container {
+        display: flex;
+    }
+
+    #instructions {
+        display: none;
+    }
+}
+
+@media (pointer: fine) and (hover: hover) and (min-width: 769px) {
+    .dpad-container {
+        display: none;
+    }
 }
 
 /* Game Over Page Styles */
@@ -936,10 +965,21 @@ body {
         max-width: 100%;
         border-radius: 0;
         height: 100vh;
+        height: 100dvh;
+        max-height: 100dvh;
     }
 
     .game-page {
-        padding: 5px;
+        padding: 0;
+        width: 95%;
+        height: 95dvh;
+        max-height: 95dvh;
+    }
+
+    #gameContainer {
+        padding: 8px;
+        justify-content: center;
+        border-radius: 0 0 12px 12px;
     }
 
     .menu-buttons {
@@ -991,7 +1031,10 @@ body {
     }
 
     .game-page {
-        padding: 3px;
+        padding: 0;
+        width: 95%;
+        height: 95dvh;
+        max-height: 95dvh;
     }
 
     .sound-toggle {
