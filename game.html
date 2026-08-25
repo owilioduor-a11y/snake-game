@@ -5,10 +5,11 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <style>
-        /* Use dynamic viewport height for mobile browsers */
-        @supports (height: 100dvh) {
-            .game-page {
-                height: 100dvh;
+        /* Prevent unwanted text zooming on mobile */
+        @media screen and (max-width: 768px) {
+            * {
+                -webkit-text-size-adjust: none;
+                text-size-adjust: none;
             }
         }
     </style>
