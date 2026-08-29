@@ -407,25 +407,25 @@ body {
     transform: translateX(-50%);
     z-index: 20;
     flex-direction: column;
-    align-items: center;
+    align-items:center;
     gap: 6px;
     pointer-events: none;
 }
 
 .dpad-middle-row {
     display: flex;
-    gap: 52px;
+    gap: 45px;
 }
 
 .dpad-btn {
     pointer-events: auto;
-    width: 56px;
-    height: 56px;
+    width: 43px;
+    height: 43px;
     border-radius: 14px;
     border: 2px solid rgba(76, 175, 80, 0.7);
     background: rgba(10, 12, 24, 0.55);
     color: #4ade80;
-    font-size: 20px;
+    font-size: 22px;
     line-height: 1;
     cursor: pointer;
     touch-action: none;

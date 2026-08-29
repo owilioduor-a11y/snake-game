@@ -25,7 +25,7 @@ class GameDataManager {
         ];
 
         this.difficultySettings = {
-            easy: { fps: 5, color: '#4CAF50', name: 'Easy' },
+            easy: { fps: 3, color: '#4CAF50', name: 'Easy' },
             medium: { fps: 8, color: '#ff9800', name: 'Medium' },
             hard: { fps: 12, color: '#f44336', name: 'Hard' }
         };
