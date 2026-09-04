@@ -16,11 +16,11 @@ let logicalHeight = 0;
 
 function updateGridSize() {
     if (window.innerWidth <= 360) {
-        currentGridSize = 28;
+        currentGridSize = 16;
     } else if (window.innerWidth <= 480) {
-        currentGridSize = 26;
+        currentGridSize = 18;
     } else if (window.innerWidth <= 768) {
-        currentGridSize = 24;
+        currentGridSize = 20;
     } else {
         currentGridSize = GRID_SIZE;
     }
@@ -36,9 +36,8 @@ function cellCenter(gridX, gridY) {
 let GRID_WIDTH, GRID_HEIGHT;
 let snake, direction, nextDirection, food;
 let score, maxCombo, combo, comboTimer;
-let gameOver, gameStarted, isPaused, sizeReduced;
-let particles, overlayParticles, screenShake, currentFPS;
-let gameLoop;
+let gameOver, gameStarted, isPaused, lastSizeReductionScore;
+let particles, overlayParticles, screenShake, currentFPS, baseFPS;
 let renderHandle = 0;
 let notificationHideTimer = 0;
 let audioContext;
@@ -52,6 +51,7 @@ function initGame() {
     updateGridSize();
     const difficultySettings = gameData.difficultySettings[currentDifficulty];
     currentFPS = difficultySettings.fps;
+    baseFPS = difficultySettings.fps;
 
     setupCanvas();
 
@@ -65,7 +65,7 @@ function initGame() {
     gameOver = false;
     gameStarted = false;
     isPaused = false;
-    sizeReduced = false;
+    lastSizeReductionScore = 0;
     particles = [];
     overlayParticles = [];
     screenShake = 0;
@@ -97,12 +97,10 @@ function setupCanvas() {
     GRID_WIDTH = Math.floor(availW / currentGridSize);
     GRID_HEIGHT = Math.floor(availH / currentGridSize);
 
-    if (GRID_WIDTH < MIN_GRID_CELLS) {
-        currentGridSize = Math.max(12, Math.floor(availW / MIN_GRID_CELLS));
-        GRID_WIDTH = Math.floor(availW / currentGridSize);
-    }
-    if (GRID_HEIGHT < MIN_GRID_CELLS) {
-        currentGridSize = Math.max(12, Math.min(currentGridSize, Math.floor(availH / MIN_GRID_CELLS)));
+    if (GRID_WIDTH < MIN_GRID_CELLS || GRID_HEIGHT < MIN_GRID_CELLS) {
+        const sizeForWidth = Math.floor(availW / MIN_GRID_CELLS);
+        const sizeForHeight = Math.floor(availH / MIN_GRID_CELLS);
+        currentGridSize = Math.max(12, Math.min(currentGridSize, sizeForWidth, sizeForHeight));
         GRID_WIDTH = Math.floor(availW / currentGridSize);
         GRID_HEIGHT = Math.floor(availH / currentGridSize);
     }
@@ -314,20 +312,20 @@ function update() {
             createParticles(center.x, center.y);
         }
 
-        if (score % 50 === 0 && currentFPS < 20) {
+        if (score % 50 === 0 && currentFPS < baseFPS + 4) {
             currentFPS += 0.5;
-            clearInterval(gameLoop);
-            gameLoop = setInterval(gameStep, 1000 / currentFPS);
         }
 
         if (score % 100 === 0) {
             showMilestoneEffect();
         }
 
-        if (score >= 250 && !sizeReduced) {
-            sizeReduced = true;
+        if (score >= lastSizeReductionScore + 250) {
+            lastSizeReductionScore = Math.floor(score / 250) * 250;
             const segmentsToRemove = Math.max(5, Math.floor(snake.length * 0.3));
-            for (let i = 0; i < segmentsToRemove; i++) {
+            const minSegments = 1;
+            const removable = Math.min(segmentsToRemove, snake.length - minSegments);
+            for (let i = 0; i < removable; i++) {
                 snake.pop();
             }
             showSizeReductionEffect();
@@ -442,24 +440,47 @@ function showComboEffect(comboCount) {
     spawnOverlayParticles(`${comboCount}x COMBO!`, 30, 0.01);
 }
 
-function gameStep() {
-    update();
+const MAX_FRAME_DELTA = 0.25;
+let lastFrameTime = 0;
+let accumulator = 0;
+
+function gameLoop(timestamp) {
+    if (!renderHandle) return;
+
+    if (lastFrameTime === 0) lastFrameTime = timestamp;
+    let dt = (timestamp - lastFrameTime) / 1000;
+    lastFrameTime = timestamp;
+
+    if (dt > MAX_FRAME_DELTA) dt = MAX_FRAME_DELTA;
+
+    if (gameStarted && !gameOver && !isPaused) {
+        accumulator += dt;
+        const stepInterval = 1 / currentFPS;
+
+        while (accumulator >= stepInterval) {
+            update();
+            accumulator -= stepInterval;
+        }
+    }
+
+    draw();
+    renderHandle = requestAnimationFrame(gameLoop);
 }
 
-function startRenderLoop() {
+function startGameLoop() {
     if (renderHandle) return;
-    const frame = () => {
-        draw();
-        renderHandle = requestAnimationFrame(frame);
-    };
-    renderHandle = requestAnimationFrame(frame);
+    lastFrameTime = 0;
+    accumulator = 0;
+    renderHandle = requestAnimationFrame(gameLoop);
 }
 
-function stopRenderLoop() {
+function stopGameLoop() {
     if (renderHandle) {
         cancelAnimationFrame(renderHandle);
         renderHandle = 0;
     }
+    lastFrameTime = 0;
+    accumulator = 0;
 }
 
 function startGame() {
@@ -467,8 +488,6 @@ function startGame() {
     playSound('click');
     gameStarted = true;
     pauseBtn.disabled = false;
-    if (gameLoop) clearInterval(gameLoop);
-    gameLoop = setInterval(gameStep, 1000 / currentFPS);
 }
 
 function togglePause() {
@@ -478,11 +497,11 @@ function togglePause() {
     if (isPaused) {
         pauseBtn.textContent = '▶️ Resume';
         pauseBtn.classList.add('paused');
-        clearInterval(gameLoop);
     } else {
         pauseBtn.textContent = '⏸️ Pause';
         pauseBtn.classList.remove('paused');
-        gameLoop = setInterval(gameStep, 1000 / currentFPS);
+        lastFrameTime = 0;
+        accumulator = 0;
     }
 }
 
@@ -568,8 +587,7 @@ function playSound(type) {
 }
 
 function goToStart() {
-    if (gameLoop) clearInterval(gameLoop);
-    stopRenderLoop();
+    stopGameLoop();
     window.location.href = 'index.html';
 }
 
@@ -640,6 +658,8 @@ function bindDpadControls() {
         { id: 'btnRight', x: 1, y: 0 }
     ];
 
+    let touchHandled = false;
+
     controls.forEach(({ id, x, y }) => {
         const button = document.getElementById(id);
         if (!button) return;
@@ -647,11 +667,17 @@ function bindDpadControls() {
         button.addEventListener('touchstart', (e) => {
             e.preventDefault();
             e.stopPropagation();
+            touchHandled = true;
             setNextDirection(x, y);
         }, { passive: false });
 
+        button.addEventListener('touchend', () => {
+            setTimeout(() => { touchHandled = false; }, 300);
+        });
+
         button.addEventListener('mousedown', (e) => {
             e.preventDefault();
+            if (touchHandled) return;
             setNextDirection(x, y);
         });
     });
@@ -753,7 +779,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     bindDpadControls();
     initGame();
-    startRenderLoop();
+    startGameLoop();
     requestAnimationFrame(() => {
         handleResize();
     });

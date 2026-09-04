@@ -10,10 +10,13 @@ A modern, feature-rich Snake game built with vanilla JavaScript, HTML5 Canvas, a
 
 - **Classic Gameplay**: Traditional snake mechanics with smooth controls
 - **Combo System**: Chain food pickups for multiplied scores
-- **Multiple Difficulty Levels**: Easy, Medium, and Hard modes
+- **Recurring Size Reduction**: Snake shrinks every 250 points to keep the challenge going
+- **Multiple Difficulty Levels**: Easy, Medium, and Hard modes with capped speed scaling
 - **Achievement System**: Unlock 8 different achievements
 - **Responsive Design**: Works on desktop, tablet, and mobile devices
+- **Mobile D-Pad**: Touch controls with landscape-optimized layout
 - **Touch Controls**: Swipe gestures for mobile gameplay
+- **Adaptive Grid**: Grid cell size scales down on smaller screens (16-20px)
 - **Visual Effects**: Particles, screen shake, and combo animations
 - **Sound Effects**: Procedural audio feedback
 - **Local Storage**: Persistent high scores and game data
@@ -36,9 +39,9 @@ A modern, feature-rich Snake game built with vanilla JavaScript, HTML5 Canvas, a
 5. Compete for high scores across different difficulty levels
 
 ### Difficulty Levels
-- **Easy**: Slower pace (5 FPS) - Great for beginners
-- **Medium**: Balanced speed (8 FPS) - Standard gameplay
-- **Hard**: Fast-paced (12 FPS) - For experienced players
+- **Easy**: Relaxed pace (3 FPS, max 7 FPS) - Great for beginners
+- **Medium**: Balanced speed (8 FPS, max 12 FPS) - Standard gameplay
+- **Hard**: Fast-paced (12 FPS, max 16 FPS) - For experienced players
 
 ## 🚀 Getting Started
 
