@@ -31,6 +31,13 @@ body {
     padding: 10px;
 }
 
+.settings-page, .gameover-page {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    overscroll-behavior: contain;
+}
+
 @media (max-width: 480px) {
     body {
         padding: 0;
@@ -158,6 +165,8 @@ body {
     overflow: hidden;
     width: 100%;
     box-sizing: border-box;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .menu-btn.primary {
@@ -269,6 +278,8 @@ body {
     color: #333;
     cursor: pointer;
     transition: all 0.3s;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .back-btn:hover {
@@ -306,6 +317,8 @@ body {
     opacity: 0.7;
     min-width: 60px;
     min-height: 30px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .pause-btn:disabled {
@@ -330,6 +343,10 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    min-width: 48px;
+    min-height: 48px;
 }
 
 .sound-toggle:hover {
@@ -419,8 +436,10 @@ body {
 
 .dpad-btn {
     pointer-events: auto;
-    width: 43px;
-    height: 43px;
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    min-height: 48px;
     border-radius: 14px;
     border: 2px solid rgba(76, 175, 80, 0.7);
     background: rgba(10, 12, 24, 0.55);
@@ -431,6 +450,7 @@ body {
     touch-action: none;
     -webkit-user-select: none;
     user-select: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .dpad-btn:active {
@@ -457,9 +477,9 @@ body {
 @media (orientation: landscape) and (max-height: 600px) {
     .dpad-container {
         left: auto;
-        bottom: 30%;
+        bottom: 20px;
         right: 20px;
-        transform: translateY(50%);
+        transform: none;
     }
 }
 
@@ -572,6 +592,8 @@ body {
     transition: all 0.3s ease;
     min-width: 120px;
     justify-content: center;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .action-btn.primary {
@@ -659,6 +681,8 @@ body {
     transition: all 0.3s ease;
     display: block;
     position: relative;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .difficulty-card input[type="checkbox"] {
@@ -754,6 +778,13 @@ body {
     position: relative;
     cursor: pointer;
     transition: all 0.3s;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    min-width: 50px;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .toggle-track {
@@ -887,6 +918,8 @@ body {
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .danger-btn:hover {
