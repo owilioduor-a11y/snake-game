@@ -117,6 +117,7 @@ function toggleParticles() {
 function resetAllData() {
     if (confirm('Are you sure you want to reset all game data? This cannot be undone.')) {
         gameData.resetAllData();
+        loadSettings();
         loadHighScores();
         loadStatistics();
         loadAchievements();

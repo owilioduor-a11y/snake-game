@@ -47,6 +47,9 @@ let renderHandle = 0;
 let notificationHideTimer = 0;
 let audioContext;
 
+const MILESTONE_FLASH_DURATION = 400;
+let milestoneFlashEnd = 0;
+
 // Spatial hash set for O(1) collision checks
 let snakeSet = new Set();
 
@@ -81,12 +84,6 @@ let snakeBodyGradientCache = new Map();
 let foodGradient = null;
 let lastFoodCx = -1, lastFoodCy = -1;
 
-// Reusable direction objects — zero allocation
-const DIR_LEFT  = { x: -1, y: 0 };
-const DIR_RIGHT = { x: 1, y: 0 };
-const DIR_UP    = { x: 0, y: -1 };
-const DIR_DOWN  = { x: 0, y: 1 };
-
 function initGame() {
     updateGridSize();
     const difficultySettings = gameData.difficultySettings[currentDifficulty];
@@ -106,6 +103,9 @@ function initGame() {
     gameStarted = false;
     isPaused = false;
     lastSizeReductionScore = 0;
+    if (comboTimer) clearTimeout(comboTimer);
+    comboTimer = null;
+    milestoneFlashEnd = 0;
     particles = new Array(512);
     particleCount = 0;
     overlayParticles = new Array(256);
@@ -346,6 +346,16 @@ function draw() {
         ctx.globalAlpha = 1;
     }
 
+    // ── Milestone screen flash (drawn here so the game loop can't overwrite it) ──
+    const flashRemaining = milestoneFlashEnd - Date.now();
+    if (flashRemaining > 0) {
+        const elapsed = MILESTONE_FLASH_DURATION - flashRemaining;
+        ctx.fillStyle = (Math.floor(elapsed / 100) % 2 === 0)
+            ? 'rgba(0, 255, 255, 0.2)'
+            : 'rgba(0, 255, 255, 0.05)';
+        ctx.fillRect(0, 0, logicalWidth, logicalHeight);
+    }
+
     ctx.restore();
 }
 
@@ -365,21 +375,29 @@ function update() {
         return;
     }
 
-    // Self collision — O(1) via spatial hash
+    const willEat = headX === food.x && headY === food.y;
+
+    // Self collision — O(1) via spatial hash.
+    // Moving into the current tail cell is safe because the tail vacates this
+    // step — unless we're eating, in which case the tail stays put.
     if (snakeSet.has(snakeKey(headX, headY))) {
-        endGame();
-        return;
+        const tail = snake[snake.length - 1];
+        const hitsTail = tail.x === headX && tail.y === headY;
+        if (!hitsTail || willEat) {
+            endGame();
+            return;
+        }
     }
 
     // Grow snake
     snake.unshift({ x: headX, y: headY });
     snakeSet.add(snakeKey(headX, headY));
 
-    if (headX === food.x && headY === food.y) {
+    if (willEat) {
         combo++;
         if (combo > maxCombo) maxCombo = combo;
         if (comboTimer) clearTimeout(comboTimer);
-        comboTimer = setTimeout(function() { combo = 0; }, 3000);
+        comboTimer = setTimeout(resetCombo, 3000);
 
         const comboMultiplier = combo < 5 ? combo : 5;
         score += 10 * comboMultiplier;
@@ -416,16 +434,24 @@ function update() {
         spawnFood();
     } else {
         const tail = snake.pop();
-        snakeSet.delete(snakeKey(tail.x, tail.y));
+        const tailKey = snakeKey(tail.x, tail.y);
+        // If the head moved onto the old tail cell, that cell is still occupied
+        // (by the head), so don't remove it from the collision set.
+        if (tailKey !== snakeKey(headX, headY)) snakeSet.delete(tailKey);
         if (combo > 0) {
-            combo = 0;
-            comboElement.textContent = '0';
+            resetCombo();
             if (comboTimer) clearTimeout(comboTimer);
         }
     }
 }
 
+function resetCombo() {
+    combo = 0;
+    comboElement.textContent = '0';
+}
+
 function endGame() {
+    if (gameOver) return;
     gameOver = true;
     playSound('gameOver');
 
@@ -458,7 +484,11 @@ function endGame() {
         difficulty: currentDifficulty,
         newAchievements: newAchievements
     }));
-    window.location.href = 'gameover.html?data=' + gameData_str;
+    // Give the game-over / achievement sounds a moment to actually play before
+    // navigating away (page navigation tears down the audio context).
+    setTimeout(function() {
+        window.location.href = 'gameover.html?data=' + gameData_str;
+    }, 600);
 }
 
 // ─── Particle spawning (pre-formatted colors, bounded arrays) ────────
@@ -499,15 +529,7 @@ function spawnOverlayParticles(text, count, decay) {
 }
 
 function showMilestoneEffect() {
-    let flashCount = 0;
-    const flashInterval = setInterval(function() {
-        ctx.fillStyle = flashCount % 2 === 0 ? 'rgba(0, 255, 255, 0.2)' : 'rgba(0, 255, 255, 0.05)';
-        ctx.fillRect(0, 0, logicalWidth, logicalHeight);
-        flashCount++;
-        if (flashCount >= 4) {
-            clearInterval(flashInterval);
-        }
-    }, 100);
+    milestoneFlashEnd = Date.now() + MILESTONE_FLASH_DURATION;
 }
 
 function showSizeReductionEffect() {
@@ -586,11 +608,21 @@ function togglePause() {
     if (isPaused) {
         pauseBtn.textContent = '▶️ Resume';
         pauseBtn.classList.add('paused');
+        // Freeze the combo timeout while paused so resuming doesn't cause a
+        // delayed (and unfair) combo reset.
+        if (comboTimer) {
+            clearTimeout(comboTimer);
+            comboTimer = null;
+        }
     } else {
         pauseBtn.textContent = '⏸️ Pause';
         pauseBtn.classList.remove('paused');
         lastFrameTime = 0;
         accumulator = 0;
+        if (combo > 0) {
+            if (comboTimer) clearTimeout(comboTimer);
+            comboTimer = setTimeout(resetCombo, 3000);
+        }
     }
 }
 

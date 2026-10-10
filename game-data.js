@@ -171,6 +171,9 @@ class GameDataManager {
         localStorage.removeItem(this.STORAGE_KEYS.ACHIEVEMENTS);
         localStorage.removeItem(this.STORAGE_KEYS.BEST_COMBO);
         localStorage.removeItem(this.STORAGE_KEYS.CURRENT_DIFFICULTY);
+        localStorage.removeItem(this.STORAGE_KEYS.SOUND_ENABLED);
+        localStorage.removeItem(this.STORAGE_KEYS.SHAKE_ENABLED);
+        localStorage.removeItem(this.STORAGE_KEYS.PARTICLES_ENABLED);
         this.initializeData();
     }
 

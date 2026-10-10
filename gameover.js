@@ -10,7 +10,8 @@ function loadGameData() {
     
     if (gameData_str) {
         try {
-            const data = JSON.parse(decodeURIComponent(gameData_str));
+            // URLSearchParams.get() already percent-decodes the value.
+            const data = JSON.parse(gameData_str);
             document.getElementById('finalScore').textContent = data.score;
             document.getElementById('highScore').textContent = data.highScore;
             document.getElementById('maxCombo').textContent = data.maxCombo + 'x';
